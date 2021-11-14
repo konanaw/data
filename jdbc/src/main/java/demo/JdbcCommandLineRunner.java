@@ -42,13 +42,20 @@ class JdbcCommandLineRunner implements CommandLineRunner {
         jdbcTemplate.batchUpdate("INSERT INTO user(first_name, last_name, email) VALUES (?,?,?)", userRecords);
 
         // <3>
-        RowMapper<User> userRowMapper = (rs, rowNum) -> new User(rs.getLong("id"),
-                rs.getString("first_name"), rs.getString("last_name"), rs.getString("email"));
+        RowMapper<User> userRowMapper = (rs, rowNum) -> User.builder().id(rs.getLong("id"))
+                .firstName(rs.getString("first_name"))
+                .lastName(rs.getString("last_name"))
+                .email(rs.getString("email"))
+                .build();
 
         List<User> users = jdbcTemplate.query(
                 "SELECT id, first_name, last_name, email FROM user WHERE first_name = ?",
                 userRowMapper, "Michael");
 
-        users.forEach(user -> log.info(user.toString()));
+        users.forEach(this::log);
+    }
+
+    private void log(User user) {
+        log.info(user.toString());
     }
 }
