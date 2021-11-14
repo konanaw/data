@@ -42,7 +42,8 @@ class JdbcCommandLineRunner implements CommandLineRunner {
         jdbcTemplate.batchUpdate("INSERT INTO user(first_name, last_name, email) VALUES (?,?,?)", userRecords);
 
         // <3>
-        RowMapper<User> userRowMapper = (rs, rowNum) -> User.builder().id(rs.getLong("id"))
+        RowMapper<User> userRowMapper = (rs, rowNum) -> User.builder()
+                .id(rs.getLong("id"))
                 .firstName(rs.getString("first_name"))
                 .lastName(rs.getString("last_name"))
                 .email(rs.getString("email"))
