@@ -15,43 +15,40 @@ import java.util.stream.Stream;
 @Component
 class JdbcCommandLineRunner implements CommandLineRunner {
 
- private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
- private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
- @Autowired
- JdbcCommandLineRunner(JdbcTemplate jdbcTemplate) {
-  this.jdbcTemplate = jdbcTemplate;
- }
+    @Autowired
+    JdbcCommandLineRunner(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
- @Override
- public void run(String... strings) throws Exception {
-  // <1>
-  jdbcTemplate.execute("DROP TABLE user IF EXISTS");
-  jdbcTemplate
-   .execute("CREATE TABLE user( id serial, first_name " +
-      " VARCHAR(255), last_name VARCHAR(255), email VARCHAR(255))");
+    @Override
+    public void run(String... strings) throws Exception {
+        // <1>
+        jdbcTemplate.execute("DROP TABLE user IF EXISTS");
+        jdbcTemplate.execute("CREATE TABLE user(id serial, first_name VARCHAR(255), last_name VARCHAR(255), email VARCHAR(255))");
 
-  // <2>
-  List<Object[]> userRecords = Stream
-   .of("Michael Hunger michael.hunger@jexp.de",
-    "Bridget Kromhout bridget@outlook.com", "Kenny Bastani kbastani@yahoo.com",
-    "Josh Long jlong@hotmail.com").map(name -> name.split(" "))
-   .collect(Collectors.toList());
+        // <2>
+        List<Object[]> userRecords = Stream.of(
+                "Michael Hunger michael.hunger@jexp.de",
+                "Bridget Kromhout bridget@outlook.com",
+                "Kenny Bastani kbastani@yahoo.com",
+                "Josh Long jlong@hotmail.com")
+                .map(name -> name.split(" "))
+                .collect(Collectors.toList());
 
-  jdbcTemplate
-   .batchUpdate(
-    "INSERT INTO user(first_name, last_name, email) VALUES (?,?,?)",
-    userRecords);
+        jdbcTemplate.batchUpdate("INSERT INTO user(first_name, last_name, email) VALUES (?,?,?)", userRecords);
 
-  // <3>
-  RowMapper<User> userRowMapper = (rs, rowNum) -> new User(rs.getLong("id"),
-   rs.getString("first_name"), rs.getString("last_name"), rs.getString("email"));
+        // <3>
+        RowMapper<User> userRowMapper = (rs, rowNum) -> new User(rs.getLong("id"),
+                rs.getString("first_name"), rs.getString("last_name"), rs.getString("email"));
 
-  List<User> users = jdbcTemplate.query(
-   "SELECT id, first_name, last_name, email FROM user WHERE first_name = ?",
-   userRowMapper, "Michael");
+        List<User> users = jdbcTemplate.query(
+                "SELECT id, first_name, last_name, email FROM user WHERE first_name = ?",
+                userRowMapper, "Michael");
 
-  users.forEach(user -> log.info(user.toString()));
- }
+        users.forEach(user -> log.info(user.toString()));
+    }
 }
