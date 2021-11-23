@@ -9,56 +9,56 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
- private final UserRepository userRepository;
+    private final UserRepository userRepository;
 
- @Autowired
- public UserService(UserRepository userRepository) {
-  this.userRepository = userRepository;
- }
+    @Autowired
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
- @CacheEvict(value = "user", key = "#user.getId()")
- // <1>
- public User createUser(User user) {
+    @CacheEvict(value = "user", key = "#user.getId()")
+    // <1>
+    public User createUser(User user) {
 
-  User result = null;
+        User result = null;
 
-  if (!userRepository.exists(user.getId())) {
-   result = this.userRepository.save(user);
-  }
+        if (!userRepository.existsById(user.getId())) {
+            result = userRepository.save(user);
+        }
 
-  return result;
- }
+        return result;
+    }
 
- @Cacheable(value = "user")
- // <2>
- public User getUser(String id) {
-  return this.userRepository.findOne(id);
- }
+    @Cacheable(value = "user")
+    // <2>
+    public User getUser(String id) {
+        return userRepository.findById(id).orElse(null);
+    }
 
- @CachePut(value = "user", key = "#id")
- // <3>
- public User updateUser(String id, User user) {
+    @CachePut(value = "user", key = "#id")
+    // <3>
+    public User updateUser(String id, User user) {
 
-  User result = null;
+        User result = null;
 
-  if (userRepository.exists(user.getId())) {
-   result = this.userRepository.save(user);
-  }
+        if (userRepository.existsById(user.getId())) {
+            result = userRepository.save(user);
+        }
 
-  return result;
- }
+        return result;
+    }
 
- @CacheEvict(value = "user", key = "#id")
- // <4>
- public boolean deleteUser(String id) {
+    @CacheEvict(value = "user", key = "#id")
+    // <4>
+    public boolean deleteUser(String id) {
 
-  boolean deleted = false;
+        boolean deleted = false;
 
-  if (userRepository.exists(id)) {
-   this.userRepository.delete(id);
-   deleted = true;
-  }
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id);
+            deleted = true;
+        }
 
-  return deleted;
- }
+        return deleted;
+    }
 }

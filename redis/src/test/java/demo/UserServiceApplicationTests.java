@@ -1,167 +1,210 @@
 package demo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
+@Testcontainers
 @AutoConfigureMockMvc
 @SpringBootTest(classes = UserServiceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles(profiles = "test")
+//@ContextConfiguration(initializers = UserServiceApplicationTests.Initializer.class)
 public class UserServiceApplicationTests {
 
- @Autowired
- private WebApplicationContext context;
+    @Container
+    private static GenericContainer redis = new GenericContainer(DockerImageName.parse("redis:latest"))
+            .withExposedPorts(6379);
 
- @Autowired
- private UserService userService;
+    @DynamicPropertySource
+    static void redisProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.redis.host", redis::getHost);
+        registry.add("spring.redis.port", redis::getFirstMappedPort);
+    }
 
- @Autowired
- private UserRepository userRepository;
+//    Second option: 
+//    public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+//        @Override
+//        public void initialize(ConfigurableApplicationContext ctx) {
+//            TestPropertyValues.of(
+//                    "spring.redis.host:" + redis.getContainerIpAddress(),
+//                    "spring.redis.port:" + redis.getFirstMappedPort())
+//                    .applyTo(ctx);
+//        }
+//    }
 
- @Autowired
- private ObjectMapper objectMapper;
+    @Autowired
+    private WebApplicationContext context;
 
- @Autowired
- private RedisTemplate redisTemplate;
+    @Autowired
+    private UserService userService;
 
- @Autowired
- private MockMvc mvc;
+    @Autowired
+    private UserRepository userRepository;
 
- @Before
- public void setUp() {
-  flush();
- }
+    @Autowired
+    private ObjectMapper objectMapper;
 
- private void flush() {
-  redisTemplate.execute((RedisConnection connection) -> {
-   connection.flushDb();
-   return "OK";
-  });
-  userRepository.deleteAll();
- }
+    @Autowired
+    private RedisTemplate redisTemplate;
 
- @Test
- public void createUser() throws Exception {
-  // Setup test data
-  User expectedUser = new User("Jane", "Doe");
+    @Autowired
+    private MockMvc mvc;
 
-  // Test create user success
-  User actualUser = objectMapper.readValue(
-   this.mvc
-    .perform(
-     post("/users").content(objectMapper.writeValueAsString(expectedUser))
-      .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-    .andExpect(status().isCreated()).andReturn().getResponse()
-    .getContentAsString(), User.class);
+    @BeforeEach
+    public void setUp() {
+        printDetailsRedis();
+        flush();
+    }
 
-  // Test create user conflict
-  this.mvc.perform(
-   post("/users").content(objectMapper.writeValueAsString(expectedUser))
-    .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)).andExpect(
-   status().isConflict());
+    @AfterAll
+    public static void stopServer() {
+        redis.stop();
+    }
 
-  // Clean up
-  userService.deleteUser(actualUser.getId());
- }
+    private void printDetailsRedis() {
+        String host = redis.getHost();
+        Integer port = redis.getFirstMappedPort();
+        System.out.println(String.format("============ redis host:port ====== %s:%s ", host, port));
+    }
 
- @Test
- public void getUser() throws Exception {
-  // Setup test data
-  User expectedUser = new User("John", "Doe");
+    private void flush() {
+        redisTemplate.execute((RedisConnection connection) -> {
+            connection.flushDb();
+            return "OK";
+        });
+        userRepository.deleteAll();
+    }
 
-  expectedUser = userService.createUser(expectedUser);
+    @Test
+    public void createUser() throws Exception {
+        // Setup test data
+        User expectedUser = new User("Jane", "Doe");
 
-  // Test get user success
-  this.mvc.perform(get("/users/{id}", expectedUser.getId()))
-   .andExpect(status().isOk())
-   .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-   .andExpect(content().string(objectMapper.writeValueAsString(expectedUser)));
+        // Test create user success
+        User actualUser = objectMapper.readValue(
+                this.mvc.perform(
+                        post("/users").content(objectMapper.writeValueAsString(expectedUser))
+                                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                        .andExpect(status().isCreated()).andReturn().getResponse()
+                        .getContentAsString(), User.class);
 
-  // Delete user
-  userService.deleteUser(expectedUser.getId());
+        // Test create user conflict
+        this.mvc.perform(post("/users")
+                .content(objectMapper.writeValueAsString(expectedUser))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(
+                status().isConflict());
 
-  // Test get user not found
-  this.mvc.perform(get("/users/{id}", expectedUser.getId())).andExpect(
-   status().isNotFound());
+        // Clean up
+        userService.deleteUser(actualUser.getId());
+    }
 
-  // Clean up
-  userService.deleteUser(expectedUser.getId());
- }
+    @Test
+    public void getUser() throws Exception {
+        // Setup test data
+        User expectedUser = new User("John", "Doe");
 
- @Test
- public void updateUser() throws Exception {
-  // Setup test data
-  User expectedUser = new User("Johnny", "Appleseed");
+        expectedUser = userService.createUser(expectedUser);
 
-  // Test get user not found
-  this.mvc.perform(get("/users/{id}", expectedUser.getId())).andExpect(
-   status().isNotFound());
+        // Test get user success
+        this.mvc.perform(get("/users/{id}", expectedUser.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(content().string(objectMapper.writeValueAsString(expectedUser)));
 
-  // Test re-create user for cache
-  // invalidation
-  expectedUser = userService.createUser(expectedUser);
+        // Delete user
+        userService.deleteUser(expectedUser.getId());
 
-  this.mvc.perform(get("/users/{id}", expectedUser.getId()))
-   .andExpect(status().isOk())
-   .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-   .andExpect(content().string(objectMapper.writeValueAsString(expectedUser)));
+        // Test get user not found
+        this.mvc.perform(get("/users/{id}", expectedUser.getId())).andExpect(
+                status().isNotFound());
 
-  // Change first name
-  expectedUser.setFirstName("John");
+        // Clean up
+        userService.deleteUser(expectedUser.getId());
+    }
 
-  // Test update user for cache
-  // invalidation
-  this.mvc.perform(
-   put("/users/{id}", expectedUser.getId()).content(
-    objectMapper.writeValueAsString(expectedUser)).contentType(
-    MediaType.APPLICATION_JSON_UTF8_VALUE)).andExpect(status().isNoContent());
+    @Test
+    public void updateUser() throws Exception {
+        // Setup test data
+        User expectedUser = new User("Johnny", "Appleseed");
 
-  // Test that user was updated
-  this.mvc.perform(get("/users/{id}", expectedUser.getId()))
-   .andExpect(status().isOk())
-   .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-   .andExpect(content().string(objectMapper.writeValueAsString(expectedUser)));
+        // Test get user not found
+        this.mvc.perform(get("/users/{id}", expectedUser.getId())).andExpect(
+                status().isNotFound());
 
-  // Clean up
-  userService.deleteUser(expectedUser.getId());
- }
+        // Test re-create user for cache
+        // invalidation
+        expectedUser = userService.createUser(expectedUser);
 
- @Test
- public void deleteUser() throws Exception {
-  // Setup test data
-  User expectedUser = new User("Sally", "Ride");
-  expectedUser = userService.createUser(expectedUser);
+        this.mvc.perform(get("/users/{id}", expectedUser.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(content().string(objectMapper.writeValueAsString(expectedUser)));
 
-  // Test getting the user to put into
-  // cache
-  this.mvc.perform(get("/users/{id}", expectedUser.getId()))
-   .andExpect(status().isOk())
-   .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-   .andExpect(content().string(objectMapper.writeValueAsString(expectedUser)));
+        // Change first name
+        expectedUser.setFirstName("John");
 
-  // Delete the user and remove from
-  // cache
-  this.mvc.perform(delete("/users/{id}", expectedUser.getId())).andExpect(
-   status().isNoContent());
+        // Test update user for cache
+        // invalidation
+        this.mvc.perform(
+                put("/users/{id}", expectedUser.getId()).content(
+                        objectMapper.writeValueAsString(expectedUser)).contentType(
+                        MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isNoContent());
 
-  // Test get user not found
-  this.mvc.perform(get("/users/{id}", expectedUser.getId())).andExpect(
-   status().isNotFound());
- }
+        // Test that user was updated
+        this.mvc.perform(get("/users/{id}", expectedUser.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(content().string(objectMapper.writeValueAsString(expectedUser)));
+
+        // Clean up
+        userService.deleteUser(expectedUser.getId());
+    }
+
+    @Test
+    public void deleteUser() throws Exception {
+        // Setup test data
+        User expectedUser = new User("Sally", "Ride");
+        expectedUser = userService.createUser(expectedUser);
+
+        // Test getting the user to put into
+        // cache
+        this.mvc.perform(get("/users/{id}", expectedUser.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(content().string(objectMapper.writeValueAsString(expectedUser)));
+
+        // Delete the user and remove from
+        // cache
+        this.mvc.perform(delete("/users/{id}", expectedUser.getId())).andExpect(
+                status().isNoContent());
+
+        // Test get user not found
+        this.mvc.perform(get("/users/{id}", expectedUser.getId())).andExpect(
+                status().isNotFound());
+    }
 }
