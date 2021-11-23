@@ -3,7 +3,9 @@ spring:
     active: development # <1>
 ---
 spring:
-  profiles: development # <2>
+  config:
+    activate:
+      on-profile: development
   jpa:
     show_sql: false
     database: MYSQL
@@ -14,7 +16,9 @@ spring:
     password: dbpass
 ---
 spring:
-  profiles: test # <3>
+  config:
+    activate:
+      on-profile: test
   jpa:
     show_sql: false
     database: H2

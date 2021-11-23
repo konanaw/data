@@ -1,28 +1,22 @@
 package service;
 
-import com.mysql.jdbc.AssertionFailedException;
 import demo.AccountApplication;
 import demo.account.Account;
 import demo.address.Address;
 import demo.address.AddressType;
 import demo.creditcard.CreditCard;
-import demo.creditcard.CreditCardType;
 import demo.customer.Customer;
 import demo.customer.CustomerRepository;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Collection;
 import java.util.Optional;
 
 import static demo.creditcard.CreditCardType.VISA;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AccountApplication.class)
 @ActiveProfiles(profiles = "test")
 public class AccountApplicationTests {
@@ -43,18 +37,17 @@ public class AccountApplicationTests {
   customer.getAccount().getAddresses().add(address);
 
   customer = customerRepository.save(customer);
-  Customer persistedResult = customerRepository.findOne(customer.getId());
-  Assert.assertNotNull(persistedResult.getAccount()); // <1>
-  Assert.assertNotNull(persistedResult.getCreatedAt());
-  Assert.assertNotNull(persistedResult.getLastModified()); // <2>
+  Optional<Customer> persistedResult = customerRepository.findById(customer.getId());
+  Assertions.assertNotNull(persistedResult.get().getAccount()); // <1>
+  Assertions.assertNotNull(persistedResult.get().getCreatedAt());
+  Assertions.assertNotNull(persistedResult.get().getLastModified()); // <2>
 
-  Assert.assertTrue(persistedResult.getAccount().getAddresses().stream()
+  Assertions.assertTrue(persistedResult.get().getAccount().getAddresses().stream()
    .anyMatch(add -> add.getStreet1().equalsIgnoreCase(street1))); // <3>
 
   customerRepository.findByEmailContaining(customer.getEmail()) // <4>
    .orElseThrow(
-    () -> new AssertionFailedException(new RuntimeException(
-     "there's supposed to be a matching record!")));
+    () -> new RuntimeException("there's supposed to be a matching record!"));
 
  }
 }
