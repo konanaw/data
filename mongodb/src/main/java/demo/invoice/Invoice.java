@@ -19,26 +19,26 @@ import java.util.List;
 @Document
 public class Invoice extends BaseEntity {
 
- @Id
- private String invoiceId;
+    @Id
+    private String invoiceId;
 
- private String customerId;
+    private String customerId;
 
- private List<Order> orders = new ArrayList<Order>();
+    private List<Order> orders = new ArrayList<Order>();
 
- private Address billingAddress;
+    private Address billingAddress;
 
- private InvoiceStatus invoiceStatus;
+    private InvoiceStatus invoiceStatus;
 
- public Invoice(String customerId, Address billingAddress) {
-  this.customerId = customerId;
-  this.billingAddress = billingAddress;
-  this.billingAddress.setAddressType(AddressType.BILLING);
-  this.invoiceStatus = InvoiceStatus.CREATED;
- }
+    public Invoice(String customerId, Address billingAddress) {
+        this.customerId = customerId;
+        this.billingAddress = billingAddress;
+        this.billingAddress.setAddressType(AddressType.BILLING);
+        this.invoiceStatus = InvoiceStatus.CREATED;
+    }
 
- public void addOrder(Order order) {
-  order.setAccountNumber(this.customerId);
-  orders.add(order);
- }
+    public void addOrder(Order order) {
+        order.setAccountNumber(this.customerId);
+        orders.add(order);
+    }
 }

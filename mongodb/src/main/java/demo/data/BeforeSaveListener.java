@@ -8,16 +8,17 @@ import org.springframework.stereotype.Component;
 @Component
 class BeforeSaveListener extends AbstractMongoEventListener<BaseEntity> {
 
- @Override
- public void onBeforeSave(BeforeSaveEvent<BaseEntity> event) {
+    @Override
+    public void onBeforeSave(BeforeSaveEvent<BaseEntity> event) {
 
-  DateTime timestamp = new DateTime();
+        DateTime timestamp = new DateTime();
 
-  if (event.getSource().getCreatedAt() == null)
-   event.getSource().setCreatedAt(timestamp);
+        if (event.getSource().getCreatedAt() == null) {
+         event.getSource().setCreatedAt(timestamp);
+        }
 
-  event.getSource().setLastModified(timestamp);
+        event.getSource().setLastModified(timestamp);
 
-  super.onBeforeSave(event);
- }
+        super.onBeforeSave(event);
+    }
 }

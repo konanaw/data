@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LineItem {
 
- private String name, productId;
+    private String name, productId;
 
- private Integer quantity;
+    private Integer quantity;
 
- private Double price, tax;
+    private Double price, tax;
 
 }

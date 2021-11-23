@@ -6,5 +6,5 @@ import org.joda.time.DateTime;
 @Data
 public class BaseEntity {
 
- private DateTime lastModified, createdAt;
+    private DateTime lastModified, createdAt;
 }

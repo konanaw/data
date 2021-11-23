@@ -15,14 +15,11 @@ public class OrderApplication {
 
     @Bean
     MongoCustomConversions customConversions() {
-        return new MongoCustomConversions(
-                Collections.singletonList(new LongToDateTimeConverter()));
+        return new MongoCustomConversions(Collections.singletonList(new LongToDateTimeConverter()));
     }
 
     @ReadingConverter
-    public static class LongToDateTimeConverter implements
-            Converter<Long, DateTime> {
-
+    public static class LongToDateTimeConverter implements Converter<Long, DateTime> {
         @Override
         public DateTime convert(Long source) {
             return Optional.ofNullable(source).map(DateTime::new).orElse(null);

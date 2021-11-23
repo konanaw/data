@@ -18,25 +18,25 @@ import java.util.List;
 @Document
 public class Order extends BaseEntity {
 
- @Id
- private String orderId;
+    @Id
+    private String orderId;
 
- private String accountNumber;
+    private String accountNumber;
 
- private OrderStatus orderStatus;
+    private OrderStatus orderStatus;
 
- private List<LineItem> lineItems = new ArrayList<>();
+    private List<LineItem> lineItems = new ArrayList<>();
 
- private Address shippingAddress;
+    private Address shippingAddress;
 
- public Order(String accountNumber, Address shippingAddress) {
-  this.accountNumber = accountNumber;
-  this.shippingAddress = shippingAddress;
-  this.shippingAddress.setAddressType(AddressType.SHIPPING);
-  this.orderStatus = OrderStatus.PENDING;
- }
+    public Order(String accountNumber, Address shippingAddress) {
+        this.accountNumber = accountNumber;
+        this.shippingAddress = shippingAddress;
+        this.shippingAddress.setAddressType(AddressType.SHIPPING);
+        this.orderStatus = OrderStatus.PENDING;
+    }
 
- public void addLineItem(LineItem lineItem) {
-  this.lineItems.add(lineItem);
- }
+    public void addLineItem(LineItem lineItem) {
+        this.lineItems.add(lineItem);
+    }
 }
