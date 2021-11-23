@@ -1,22 +1,26 @@
-package orders;
+package demo;
 
-import demo.OrderApplication;
 import demo.address.Address;
 import demo.invoice.Invoice;
 import demo.invoice.InvoiceRepository;
 import demo.order.LineItem;
 import demo.order.Order;
 import demo.order.OrderRepository;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+//import org.junit.After;
+//import org.junit.Assert;
+//import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+//import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringRunner.class)
+import static org.junit.jupiter.api.Assertions.*;
+
+//@RunWith(SpringRunner.class)
+@Disabled
 @SpringBootTest(classes = OrderApplication.class)
 public class OrderApplicationTest {
 
@@ -26,8 +30,8 @@ public class OrderApplicationTest {
  @Autowired
  private InvoiceRepository invoiceRepository;
 
- @Before
- @After
+ @BeforeEach
+ @AfterEach
  public void reset() {
   orderRepository.deleteAll();
   invoiceRepository.deleteAll();
@@ -50,13 +54,13 @@ public class OrderApplicationTest {
    "SKU-64233", 2, 21.99, .06));
   order = orderRepository.save(order);
   // <1>
-  Assert.assertNotNull(order.getOrderId());
-  Assert.assertEquals(order.getLineItems().size(), 4);
+  assertNotNull(order.getOrderId());
+  assertEquals(order.getLineItems().size(), 4);
 
   // <2>
-  Assert.assertEquals(order.getLastModified(), order.getCreatedAt());
+  assertEquals(order.getLastModified(), order.getCreatedAt());
   order = orderRepository.save(order);
-  Assert.assertNotEquals(order.getLastModified(), order.getCreatedAt());
+  assertNotEquals(order.getLastModified(), order.getCreatedAt());
 
   // <3>
   Address billingAddress = new Address("875 Howard St", null, "CA",
@@ -66,10 +70,10 @@ public class OrderApplicationTest {
   Invoice invoice = new Invoice(accountNumber, billingAddress);
   invoice.addOrder(order);
   invoice = invoiceRepository.save(invoice);
-  Assert.assertEquals(invoice.getOrders().size(), 1);
+  assertEquals(invoice.getOrders().size(), 1);
 
   // <4>
-  Assert.assertEquals(invoiceRepository.findByBillingAddress(billingAddress),
+  assertEquals(invoiceRepository.findByBillingAddress(billingAddress),
    invoice);
  }
 }

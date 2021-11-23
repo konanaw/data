@@ -1,6 +1,18 @@
 spring:
+  profiles:
+    active: dev
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
   data:
     mongodb:
       host: localhost
       port: 27017
       database: orders
+---
+spring:
+  config:
+    activate:
+      on-profile: test
