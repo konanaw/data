@@ -4,20 +4,18 @@ import demo.catalog.Catalog;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.neo4j.ogm.annotation.GraphId;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-
-import java.util.HashSet;
-import java.util.Set;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@NodeEntity
+@Node
 public class Product {
 
- @GraphId
+ @Id
+ @GeneratedValue
  private Long id;
 
  private String name, productId;

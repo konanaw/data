@@ -5,25 +5,27 @@ import demo.warehouse.Warehouse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.neo4j.ogm.annotation.GraphId;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@NodeEntity
+@Node
 public class Inventory {
 
- @GraphId
+ @Id
+ @GeneratedValue
  private Long id;
 
  private String inventoryNumber;
 
- @Relationship(type = "PRODUCT_TYPE", direction = "OUTGOING")
+ @Relationship(type = "PRODUCT_TYPE", direction = Relationship.Direction.OUTGOING)
  private Product product;
 
- @Relationship(type = "STOCKED_IN", direction = "OUTGOING")
+ @Relationship(type = "STOCKED_IN", direction = Relationship.Direction.OUTGOING)
  private Warehouse warehouse;
 
  private InventoryStatus status;

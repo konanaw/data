@@ -1,6 +1,6 @@
 package demo.inventory;
 
-import org.springframework.data.neo4j.repository.GraphRepository;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-public interface InventoryRepository extends GraphRepository<Inventory> {
+public interface InventoryRepository extends Neo4jRepository<Inventory, Long> {
 }
