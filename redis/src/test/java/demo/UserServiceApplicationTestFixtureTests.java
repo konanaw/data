@@ -1,9 +1,9 @@
 package demo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,14 +11,10 @@ import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -31,29 +27,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest(classes = UserServiceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles(profiles = "test")
-//@ContextConfiguration(initializers = UserServiceApplicationTests.Initializer.class)
-public class UserServiceApplicationTests {
+@ExtendWith(RedisExtension.class)
+public class UserServiceApplicationTestFixtureTests {
 
-    @Container
-    private static GenericContainer redis = new GenericContainer(DockerImageName.parse("redis:latest"))
-            .withExposedPorts(6379);
-
-    @DynamicPropertySource
-    static void redisProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.redis.host", redis::getHost);
-        registry.add("spring.redis.port", redis::getFirstMappedPort);
-    }
-
-//    Second option: 
-//    public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-//        @Override
-//        public void initialize(ConfigurableApplicationContext ctx) {
-//            TestPropertyValues.of(
-//                    "spring.redis.host:" + redis.getHost(),
-//                    "spring.redis.port:" + redis.getFirstMappedPort())
-//                    .applyTo(ctx);
-//        }
-//    }
+    private static GenericContainer redis = RedisExtension.redis;
 
     @Autowired
     private WebApplicationContext context;
@@ -77,11 +54,6 @@ public class UserServiceApplicationTests {
     public void setUp() {
         printDetailsRedis();
         flush();
-    }
-
-    @AfterAll
-    public static void stopServer() {
-        redis.stop();
     }
 
     private void printDetailsRedis() {

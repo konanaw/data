@@ -7,12 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.containers.GenericContainer;
@@ -31,29 +33,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest(classes = UserServiceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles(profiles = "test")
-//@ContextConfiguration(initializers = UserServiceApplicationTests.Initializer.class)
-public class UserServiceApplicationTests {
+@ContextConfiguration(initializers = UserServiceApplicationWithInitializerTests.Initializer.class)
+public class UserServiceApplicationWithInitializerTests {
 
     @Container
     private static GenericContainer redis = new GenericContainer(DockerImageName.parse("redis:latest"))
             .withExposedPorts(6379);
 
-    @DynamicPropertySource
-    static void redisProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.redis.host", redis::getHost);
-        registry.add("spring.redis.port", redis::getFirstMappedPort);
+    public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+        @Override
+        public void initialize(ConfigurableApplicationContext ctx) {
+            TestPropertyValues.of(
+                    "spring.redis.host:" + redis.getHost(),
+                    "spring.redis.port:" + redis.getFirstMappedPort())
+                    .applyTo(ctx);
+        }
     }
-
-//    Second option: 
-//    public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-//        @Override
-//        public void initialize(ConfigurableApplicationContext ctx) {
-//            TestPropertyValues.of(
-//                    "spring.redis.host:" + redis.getHost(),
-//                    "spring.redis.port:" + redis.getFirstMappedPort())
-//                    .applyTo(ctx);
-//        }
-//    }
 
     @Autowired
     private WebApplicationContext context;
@@ -205,4 +200,5 @@ public class UserServiceApplicationTests {
         this.mvc.perform(get("/users/{id}", expectedUser.getId())).andExpect(
                 status().isNotFound());
     }
+
 }
