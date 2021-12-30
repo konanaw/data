@@ -1,10 +1,11 @@
 package demo.data;
 
 import lombok.Data;
-import org.joda.time.DateTime;
+
+import java.time.ZonedDateTime;
 
 @Data
 public class BaseEntity {
 
-    private DateTime lastModified, createdAt;
+    private ZonedDateTime lastModified, createdAt;
 }

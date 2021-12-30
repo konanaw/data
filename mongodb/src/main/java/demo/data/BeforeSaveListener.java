@@ -1,20 +1,21 @@
 package demo.data;
 
-import org.joda.time.DateTime;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.stereotype.Component;
 
+import java.time.ZonedDateTime;
+
 @Component
-class BeforeSaveListener extends AbstractMongoEventListener<BaseEntity> {
+public class BeforeSaveListener extends AbstractMongoEventListener<BaseEntity> {
 
     @Override
     public void onBeforeSave(BeforeSaveEvent<BaseEntity> event) {
 
-        DateTime timestamp = new DateTime();
+        ZonedDateTime timestamp = ZonedDateTime.now();
 
         if (event.getSource().getCreatedAt() == null) {
-         event.getSource().setCreatedAt(timestamp);
+            event.getSource().setCreatedAt(timestamp);
         }
 
         event.getSource().setLastModified(timestamp);

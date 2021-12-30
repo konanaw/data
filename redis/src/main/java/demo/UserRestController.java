@@ -21,7 +21,7 @@ class UserRestController {
 
  @PostMapping
  ResponseEntity create(@RequestBody User user) {
-  Assert.notNull(user);
+  Assert.notNull(user, "[Assertion failed] - user argument is required; it must not be null");
   return Optional.ofNullable(userService.createUser(user))
    .map(result -> new ResponseEntity<>(result, HttpStatus.CREATED))
    .orElse(new ResponseEntity<>(HttpStatus.CONFLICT));
