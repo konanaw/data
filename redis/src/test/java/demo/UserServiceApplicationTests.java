@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest(classes = UserServiceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles(profiles = "test")
-//@ContextConfiguration(initializers = UserServiceApplicationTests.Initializer.class)
 public class UserServiceApplicationTests {
 
     @Container
@@ -43,17 +42,6 @@ public class UserServiceApplicationTests {
         registry.add("spring.redis.host", redis::getHost);
         registry.add("spring.redis.port", redis::getFirstMappedPort);
     }
-
-//    Second option: 
-//    public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-//        @Override
-//        public void initialize(ConfigurableApplicationContext ctx) {
-//            TestPropertyValues.of(
-//                    "spring.redis.host:" + redis.getHost(),
-//                    "spring.redis.port:" + redis.getFirstMappedPort())
-//                    .applyTo(ctx);
-//        }
-//    }
 
     @Autowired
     private WebApplicationContext context;
