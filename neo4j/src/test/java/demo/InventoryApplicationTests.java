@@ -36,7 +36,7 @@ import static demo.inventory.InventoryStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(classes = InventoryApplication.class)
 public class InventoryApplicationTests {
 

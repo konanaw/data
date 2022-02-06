@@ -23,12 +23,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 //@DataMongoTest(excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class) // нет в контексте @Component, поэтому подключаем @SpringBootTest
 @SpringBootTest(classes = OrderApplication.class)
 @ActiveProfiles(profiles = "test")
 @ContextConfiguration(classes = MongoConfig.class)
 public class OrderAppMongoDBTest {
+
     @Container
     private static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
 
